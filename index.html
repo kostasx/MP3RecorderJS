@@ -52,6 +52,8 @@
         recorderObject = $recorder.data('recorderObject');
         recorderObject.stop();
         
+        // EXPORT TO AN MP3 FILE AND DOWNLOAD
+        // recorderObject.exportMP3File(); return;
         recorderObject.exportMP3(function(base64_mp3_data) {
           var url = 'data:audio/mp3;base64,' + base64_mp3_data;
           var au  = document.createElement('audio');
