@@ -95,8 +95,37 @@
       });
     }
     
-    
-    
+    //* EXPERIMENTAL // Export to an .mp3 file and automatically download...
+    this.exportMP3File = function(cb){
+      this.logStatus('converting...');
+      
+      // export the blob from the worker
+      this.exportBlob(function(blob) {
+        var fileReader = new FileReader();
+        
+        fileReader.addEventListener("loadend", function() {
+          var wavBuffer = new Uint8Array(this.result);
+          var wavData = parseWav(wavBuffer);
+          
+          encoderWorker.addEventListener('message', function(e) {
+
+            /*** e.data.buffer -- IS --> Uint8Array ***/
+            if (e.data.cmd == 'data') {
+                var blob      = new Blob( [new Uint8Array(e.data.buffer)], {type: "audio/mpeg3"});
+                var objectUrl = URL.createObjectURL(blob);
+                window.open(objectUrl);
+            }
+          });
+          
+          encoderWorker.postMessage({ cmd: 'init', config: { mode: 3, channels: 1, samplerate: wavData.sampleRate, bitrate: wavData.bitsPerSample } });
+          encoderWorker.postMessage({ cmd: 'encode', buf: Uint8ArrayToFloat32Array(wavData.samples) });
+          encoderWorker.postMessage({ cmd: 'finish' });
+        });
+        
+        fileReader.readAsArrayBuffer(blob);
+      });
+    }
+    //*
     
     // event listener for return values of the recorderWorker
     recorderWorker.addEventListener('message', function(e) {
